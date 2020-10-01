@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My to-do list</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1>My to-do list</h1>
+        <form action="/addActivity" method="POST">
+            <input type="text" placeholder="Daily Activity" name="name">
+            <input type="text" placeholder="Time" name="time">
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+        <br>
+        <div id="activities"></div>
+        <div id="update"></div>
+    </div>
+    
+    <script>
+        const loadProducts = () => {
+            fetch('/activities')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('activities')
+                container.innerHTML = ' ';
+                data.forEach(element => {
+                    const item = document.createElement('li');
+                    item.innerHTML = `<div class="alert alert-primary" role="alert">
+                                        <strong>Activity:</strong> ${element.name} @ Time: ${element.time}
+                                        <button onclick="deleteProduct(event,'${element._id}')" type="submit" class="btn btn-danger">Delete</button>
+                                        <button onclick="updateProduct('${element._id}')" type="submit" class="btn btn-warning">Update</button>
+                                    </div>`;
+                    container.appendChild(item);
+                });
+        })
+        }
+        loadProducts();
+
+        const deleteProduct = (event, id) => {
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data){
+                    event.target.parentNode.parentNode.style.display="none"
+                }
+            })
+        }
+
+        const updateProduct = (id) => {
+            fetch(`/update/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                const item = document.getElementById('update');
+                update.innerHTML = 
+                `<input type="text" placeholder="Daily Activity" name="${data.name}" id="name">
+                <input type="text" placeholder="Time" name="${data.time}" id="time">
+                <button onclick="updateConfirm('${data._id}')" type="submit" class="btn btn-success">Submit</button>`
+            })
+        }
+
+        const updateConfirm = (id) => {
+            const name = document.getElementById('name').value;
+            const time = document.getElementById('time').value;
+            const routine = {id, time, name};
+
+            fetch(`/updateConfirm/${id}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(routine)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data){
+                    loadProducts() 
+                    const item = document.getElementById('update');
+                    update.innerHTML = ' ';
+                }
+                })
+        }
+    </script>
+</body>
+</html>
